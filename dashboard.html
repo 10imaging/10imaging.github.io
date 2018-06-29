@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>10 Imaging : CameraZ Dashboard</title>
+    <!-- Favicon -->
+    <link rel="shortcut icon" type="image/icon" href="assets/images/favicon.ico"/>
+    <!-- Font Awesome -->
+    <link href="assets/css/font-awesome.css" rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    <!-- Slick slider -->
+    <link rel="stylesheet" type="text/css" href="assets/css/slick.css"/>
+    <!-- Fancybox slider -->
+    <link rel="stylesheet" href="assets/css/jquery.fancybox.css" type="text/css" media="screen" />
+    <!-- Animate css -->
+    <link rel="stylesheet" type="text/css" href="assets/css/animate.css"/>
+     <!-- Theme color -->
+    <link id="switcher" href="assets/css/theme-color/default.css" rel="stylesheet">
+    
+    <link href="preloader.css" rel="stylesheet">
+    <!-- Main Style -->
+    <link href="style.css" rel="stylesheet">
+
+    <!-- Fonts -->
+    <!-- Open Sans for body font -->
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <!-- Raleway for Title -->
+    <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+    <!-- Pacifico for 404 page   -->
+    <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+
+    <!-- Load c3.css -->
+    <link href="assets/css/c3.min.css" rel="stylesheet" type="text/css">
+    <!-- Load d3.js and c3.js -->
+    <script src="assets/js/d3.min.js" charset="utf-8"></script>
+    <script src="assets/js/c3.min.js"></script>
+    <link href="assets/css/keen-dataviz-1.1.3.css" rel="stylesheet">
+    <script type="text/javascript" src="assets/js/keen-analysis-1.2.2.js"></script>
+    <script type="text/javascript" src="assets/js/keen-dataviz-1.1.3.js"></script>
+<!--
+    <script src="assets/js/keen.min.js"></script>
+    <link href="assets/css/keen-dataviz-1.1.3.css" rel="stylesheet">
+    <script type="text/javascript" src="assets/js/keen-analysis-1.2.2.js"></script>
+    <script type="text/javascript" src="assets/js/keen-dataviz-1.1.3.js"></script>
+-->
+    <script>
+    var client = new Keen({
+      projectId: "590aca423d5e15299e649119",
+      readKey: "7BB5390D5A3CE371D874F775E67CE0D6D95DF8468DA880D99ABAFFF6DB9A797B0943770CAF0AA6C20A6F294326F72E75783ACE02FBC766A9689ED210D39532E0A53832EDC2AD77D9BDB2A3CC55263C0593C8A3C44107CE331B7591B8A45CEE1D"
+    });
+    
+    Keen.ready(function() {
+      var keen_chart = new Keen.Dataviz()
+        .el('#keen_chart')
+        .chartType("bar")
+        .height(300)
+        .stacked(false)
+        .prepare();
+        
+      var timeframe = "last_30_days"
+      var q1 = new Keen.Query("average", {
+        event_collection: "kpi",
+        filters: [
+          {
+            "operator": "gt",
+            "property_name": "process_detect_caffe_average",
+            "property_value": 0
+          },
+          {
+            "operator": "not_contains",
+            "property_name": "system_devicename",
+            "property_value": "XT1650"
+          }
+        ],
+        group_by: [
+          "system_devicename"
+        ],
+        target_property: "process_detect_caffe_average",
+        timeframe: timeframe,
+        timezone: "US/Mountain"
+      });
+      
+      var q2 = new Keen.Query("average", {
+        event_collection: "kpi",
+        filters: [
+          {
+            "operator": "gt",
+            "property_name": "process_detect_caffe_min",
+            "property_value": 0
+          },
+          {
+            "operator": "not_contains",
+            "property_name": "system_devicename",
+            "property_value": "XT1650"
+          }
+        ],
+        group_by: [
+          "system_devicename"
+        ],
+        target_property: "process_detect_caffe_min",
+        timeframe: timeframe,
+        timezone: "US/Mountain"
+      });
+
+      //var adapter = keen_chart.adapter();
+      var attrib = keen_chart.attributes();
+      var library = keen_chart.library();
+      
+      var req = client.run([q1, q2], function(err, res) {
+        if (err) {
+          chart.error(err.message);
+        }
+        else {
+          var result1 = res[0].result
+          var result2 = res[1].result
+          var data = []
+          var i=0
+          
+          while (i < result1.length) {
+            data[i]={
+              string: result1[i]["system_devicename"],
+              number: [
+                { result: result2[i]["result"] },
+                { result: result1[i]["result"]-result2[i]["result"] }
+              ]
+            }
+            i++;
+          }
+          keen_chart
+          .data({ result: data })
+          .stacked(true)
+          .title("Caffe Detect Scene (ms) by Device")
+          .render();
+        }
+      });
+    });
+    </script
+  </head>
+  <body>
+  <div id="keen_chart"></div>
+  </body>
